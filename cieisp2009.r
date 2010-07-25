@@ -9,7 +9,7 @@ library(maptools)
 library(gpclib)
 library(RColorBrewer)
 
-barPlot <- function(df, mean, colors = brewer.pal(9, "Reds"),
+barPlot <- function(df, mean, colors = brewer.pal(9, "YlOrBr"),
                     percent = FALSE, xlab = "") {
     if(min(df$rates) == 0 && !percent) df[df$rates==0,]$rates <- .005
     if(percent) {
@@ -68,7 +68,7 @@ loadMXMap <- function() {
 }
 
 
-plotChoro <- function(df, mean, colors = brewer.pal(9, "Reds"),
+plotChoro <- function(df, mean, colors = brewer.pal(9, "YlOrRd"),
                       title = "", percent = FALSE) {
   if(min(df$rates) == 0 && !percent) df[df$rates==0,]$rates <- .005
   mx.map <- merge(mx.map, df, by.x = "id", by.y = "State")
@@ -99,7 +99,7 @@ plotChoro <- function(df, mean, colors = brewer.pal(9, "Reds"),
 }
 
 saveBarChoro <- function(df, mean, filename,
-                     colors = brewer.pal(9, "Reds"),
+                     colors = brewer.pal(9, "YlOrRd"),
                      title = "Homicide rates in Mexico - 2009",
                      percent = FALSE, xlab = ""){
     grid.newpage()
@@ -136,16 +136,35 @@ state.pops <- c(1141946, 3165776, 565400, 795982, 2628942, 600924,
 1921959, 1379752)
 sum(state.pops) == mexico.pop
 
+sum(apply(cieisp.pre[2:13], 1, sum))
+icesi <- c(66, 749, 31, 41, 240, 52, 457, 2523, 747,
+930, 414, 1431, 137, 570, 1345, 728, 317, 148,
+267, 752, 414, 90, 177, 158, 1251, 498, 117,
+288, 48, 347, 33, 76)
+hom.com <- data.frame(SNSP = icesi,
+                      estimates = apply(cieisp.pre[2:13], 1, sum),
+                      cieisp[1])
+hom.com$State <- with(hom.com, reorder(State,
+                                       abs(SNSP - estimates)))
+print(ggplot(melt(hom.com, id = "State"), aes(State, value,
+               color = variable)) +
+    geom_point() +
+    coord_flip() +
+    ylab("number of homicides") +
+    opts(title = "Comparison of the SNSP homicide data with missing homicides\nto estimates obtained by linear regression"))
+dev.print(png, "charts/snsp-vs-est.png", width = 480, height = 640)
+
 #rate for 2009 = 15.2
 hom.mean <- sum(apply(cieisp.pre[2:13], 1, sum)) / mexico.pop * 100000
 
 #Load the map of Mexico
 mx.map <- loadMXMap()
 
+icesi[8] <- sum(cieisp.pre[8,2:13])
 ########################################################
 #barplot and choropleth of the homicide rates
 ########################################################
-state.rates <- data.frame(rates = apply(cieisp.pre[2:13], 1, sum) /
+state.rates <- data.frame(rates = icesi /
                                    state.pops * 100000,
                           population = state.pops,
                           cieisp[1])
@@ -163,7 +182,7 @@ exe.mean <- exe$mean[33] / mexico.pop * 100000
 exe <- merge(exe, state.rates[,2:3], by = "State")
 exe$rates <- exe$mean / exe$population * 100000
 saveBarChoro(exe, exe.mean, "execution-rate-2009.png",
-         colors = brewer.pal(9, "Greens"),
+         colors = brewer.pal(9, "PuBuGn"),
          title = "Narco-Execution rates in Mexico - 2009",
          xlab = "narco-executions per 100,000")
 
@@ -171,8 +190,6 @@ saveBarChoro(exe, exe.mean, "execution-rate-2009.png",
 ########################################################
 #Percentage of homicides that are executions
 ########################################################
-state.rates$State <- reorder(state.rates$State, state.rates$rates)
-
 
 exe.perc <- merge(exe, state.rates, by = "State")
 exe.perc <- transform(exe.perc, rates = rates.x / rates.y)
@@ -180,7 +197,7 @@ exe.perc$State <- with(exe.perc, reorder(State, rates))
 
 saveBarChoro(exe.perc, exe.mean / hom.mean,
              "homicide-vs-execution.png",
-             colors = brewer.pal(9, "Blues"),
+             colors = brewer.pal(9, "Greens"),
              title = "Percentage of homicides that were narco-executions in Mexico - 2009",
              percent = TRUE,
              xlab = "narco-executions as a percentage of homicides")
