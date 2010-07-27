@@ -53,7 +53,7 @@ barPlot <- function(df, mean, colors = brewer.pal(9, "YlOrBr"),
 }
 
 loadMXMap <- function() {
-    if(!file.exists("gadm-mexico.RData")) {
+    if(!file.exists("map/gadm-mexico.RData")) {
         con <- url("http://gadm.org/data/rda/MEX_adm1.RData")
         load(con)
         save(gadm, file = "map/gadm-mexico.RData")
