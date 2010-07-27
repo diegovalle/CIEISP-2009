@@ -53,17 +53,17 @@ barPlot <- function(df, mean, colors = brewer.pal(9, "YlOrBr"),
 }
 
 loadMXMap <- function() {
-    #if(!file.exists("gadm-mexico.RData")) {
-     #   con <- url("http://gadm.org/data/rda/MEX_adm1.RData")
-     #   load(con)
-     #   save(gadm, file = "map/gadm-mexico.RData")
-     #} else {
-      #  load("map/gadm-mexico.RData")
-    #}
-    load("map/map_mx.RData")
+    if(!file.exists("gadm-mexico.RData")) {
+        con <- url("http://gadm.org/data/rda/MEX_adm1.RData")
+        load(con)
+        save(gadm, file = "map/gadm-mexico.RData")
+     } else {
+        load("map/gadm-mexico.RData")
+    }
+    #load("map/map_mx.RData")
     gpclibPermit()
-    mx.map <- fortify(mexico.shp, region = "NAME_1")
-    #mx.map <- fortify(gadm, region = "NAME_1")
+    #mx.map <- fortify(mexico.shp, region = "NAME_1")
+    mx.map <- fortify(gadm, region = "NAME_1")
     mx.map
 }
 
@@ -136,7 +136,7 @@ state.pops <- c(1141946, 3165776, 565400, 795982, 2628942, 600924,
 1921959, 1379752)
 sum(state.pops) == mexico.pop
 
-sum(apply(cieisp.pre[2:13], 1, sum))
+sum(apply(cieisp.pre[2:13], 1, sum)) + 400
 icesi <- c(66, 749, 31, 41, 240, 52, 457, 2523, 747,
 930, 414, 1431, 137, 570, 1345, 728, 317, 148,
 267, 752, 414, 90, 177, 158, 1251, 498, 117,
@@ -154,13 +154,15 @@ print(ggplot(melt(hom.com, id = "State"), aes(State, value,
     opts(title = "Comparison of the SNSP homicide data with missing homicides\nto estimates obtained by linear regression"))
 dev.print(png, "charts/snsp-vs-est.png", width = 480, height = 640)
 
-#rate for 2009 = 15.2
-hom.mean <- sum(apply(cieisp.pre[2:13], 1, sum)) / mexico.pop * 100000
+#rate for 2009 = 15.0
+icesi[8] <- sum(cieisp.pre[8,2:13])
+hom.mean <- sum(icesi) / mexico.pop * 100000
 
 #Load the map of Mexico
 mx.map <- loadMXMap()
 
-icesi[8] <- sum(cieisp.pre[8,2:13])
+
+sum(icesi)  / mexico.pop * 100000
 ########################################################
 #barplot and choropleth of the homicide rates
 ########################################################
